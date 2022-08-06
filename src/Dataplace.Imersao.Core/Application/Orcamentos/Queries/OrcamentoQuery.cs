@@ -14,6 +14,8 @@ namespace Dataplace.Imersao.Core.Application.Orcamentos.Queries
         public DateTime? DtFim { get; set; }
         public string CdCliente { get; set; }
         public int NumOrcamento { get; set; }
+
+        public string Vendedor { get; set; }
     }
 
 

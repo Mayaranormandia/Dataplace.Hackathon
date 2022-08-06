@@ -92,6 +92,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Application\Behaviors\ValidationBehaviour.cs" />
+    <Compile Include="Application\Clientes\Queries\ClienteQuery.cs" />
+    <Compile Include="Application\Clientes\Queries\ClienteQueryHandler.cs" />
+    <Compile Include="Application\Clientes\ViewModels\ClienteViewModel.cs" />
     <Compile Include="Application\Orcamentos\Commands\AdicionarOrcamentoCommand.cs" />
     <Compile Include="Application\Orcamentos\Commands\AdicionarItemCommand.cs" />
     <Compile Include="Application\Orcamentos\Commands\AtribuirDataDePrevisaoEntregaAoOrcamentoCommand.cs" />

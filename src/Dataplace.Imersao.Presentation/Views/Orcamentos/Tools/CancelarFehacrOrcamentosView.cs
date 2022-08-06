@@ -3,14 +3,20 @@ using Dataplace.Core.Comunications;
 using Dataplace.Core.Domain.Localization.Messages.Extensions;
 using Dataplace.Core.Domain.Notifications;
 using Dataplace.Core.Infra.CrossCutting.EventAggregator.Contracts;
+using Dataplace.Core.win.Controls.Extensions;
 using Dataplace.Core.win.Controls.List.Behaviors;
 using Dataplace.Core.win.Controls.List.Behaviors.Contracts;
 using Dataplace.Core.win.Controls.List.Configurations;
+using Dataplace.Core.win.Views;
+using Dataplace.Core.win.Views.Extensions;
+using Dataplace.Imersao.Core.Application.Clientes.ViewModels;
 using Dataplace.Imersao.Core.Application.Orcamentos.Commands;
 using Dataplace.Imersao.Core.Application.Orcamentos.Queries;
 using Dataplace.Imersao.Core.Application.Orcamentos.ViewModels;
 using Dataplace.Imersao.Core.Domain.Orcamentos.Enums;
 using Dataplace.Imersao.Presentation.Views.Orcamentos.Messages;
+using Dataplace.Imersao.Presentation.Views.Providers;
+using dpLibrary05;
 using dpLibrary05.Infrastructure.Helpers;
 using dpLibrary05.Infrastructure.Helpers.Permission;
 using dpLibrary05.Infrastructure.Helpers.SimpleSqlBulk;
@@ -33,6 +39,7 @@ namespace Dataplace.Imersao.Presentation.Views.Orcamentos.Tools
         private IListBehavior<OrcamentoViewModel, OrcamentoQuery> _orcamentoList;
         private readonly IServiceProvider _serviceProvider;
         private readonly IEventAggregator _eventAggregator;
+        private IList<ClienteViewModel> _clientesSelecionados;
         #endregion
 
         #region constructors
@@ -80,14 +87,22 @@ namespace Dataplace.Imersao.Presentation.Views.Orcamentos.Tools
             // dtpPrevisaoEntrega.KeyDown += Dtp_KeyDown;
 
 
-            //dpiVendedor.SearchObject = GetSearchVendedor();
-            //dpiVendedor.SearchObject = Common.PedidoSearch.find_usuario();
+            dpVendedor.SearchObject = GetSearchVendedor();
+            //dpUsuario.SearchObject = Common.PedidoSearch.find_usuario();
             dpCliente.SearchObject = Common.PedidoSearch.find_cliente(new clsSymSearch.SearchArgs()
             {
                 Fields = new List<clsSymInterfaceSearchField>() {
                     new clsSymInterfaceSearchField() { SearchIndex=2, VisibleEdit =false },
                     new clsSymInterfaceSearchField() { SearchIndex=4, VisibleEdit =false }
                 }
+            });
+
+
+
+
+            var clienteViewProvicer = dpLibrary05.BootStrapper.Container.GetViewProvider<SelectableListView, ClienteListViewProvider>();
+            chkSelCliente.ConfigureSelector(clienteViewProvicer, itens => {
+                _clientesSelecionados = itens.ToList();
             });
 
             // rotina para validar status do controle
@@ -128,6 +143,9 @@ namespace Dataplace.Imersao.Presentation.Views.Orcamentos.Tools
 
             if (optFechar.Checked)
                 _tipoAcao = TipoAcaoEnum.FecharOrcamento;
+
+            if (opreabrir.Checked)
+                _tipoAcao = TipoAcaoEnum.ReabrirOrcamento;
 
 
 
@@ -177,6 +195,11 @@ namespace Dataplace.Imersao.Presentation.Views.Orcamentos.Tools
                         // registrar log na parte de detalhes
                         e.LogBuilder.Items.Add($"Orçamento {item.NumOrcamento} fechado", dpLibrary05.Infrastructure.Helpers.LogBuilder.LogTypeEnum.Information);
                         break;
+                    case TipoAcaoEnum.ReabrirOrcamento:
+                        await ReabrirOrcamento(item);
+                        // registrar log na parte de detalhes
+                        e.LogBuilder.Items.Add($"Orçamento {item.NumOrcamento} reaberto", dpLibrary05.Infrastructure.Helpers.LogBuilder.LogTypeEnum.Information);
+                        break;
                     default:
                         break;
                 }
@@ -203,11 +226,11 @@ namespace Dataplace.Imersao.Presentation.Views.Orcamentos.Tools
         }
 
         // teclas de atalho
-        private async void CancelamentoOrcamentoView_KeyDown(object sender, KeyEventArgs e)
+        private  void CancelamentoOrcamentoView_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.F5)
             {
-                await _orcamentoList.LoadAsync();
+                LoadList();
             }
 
             if (e.Control && e.Shift && e.KeyCode == Keys.M)
@@ -282,7 +305,7 @@ namespace Dataplace.Imersao.Presentation.Views.Orcamentos.Tools
             configuration.Ignore(x => x.SqTabela);
             configuration.Ignore(x => x.CdTabela);
             //configuration.Ignore(x => x.CdVendedor);
-            configuration.Ignore(x => x.DiasValidade);
+            //configuration.Ignore(x => x.DiasValidade);
             configuration.Ignore(x => x.DataValidade);
             configuration.Ignore(x => x.TotalItens);
 
@@ -335,7 +358,9 @@ namespace Dataplace.Imersao.Presentation.Views.Orcamentos.Tools
 
 
             string cdCliente = dpCliente.GetValue()?.ToString();
+            string Vendedor = dpVendedor.GetValue()?.ToString();
             int numOrcamento = (int)Convert.ToInt64(dpiNumOrcamento.GetValue()?.ToString().Length == 0 ? 0 : dpiNumOrcamento.GetValue());
+
 
 
             DateTime? dtInicio = null;
@@ -346,8 +371,29 @@ namespace Dataplace.Imersao.Presentation.Views.Orcamentos.Tools
             if (rangeDate.Date2.Value is DateTime d2)
                 dtFim = d2;
 
-            var query = new OrcamentoQuery() { SituacaoList = situacaoList, DtInicio = dtInicio, DtFim = dtFim, CdCliente = cdCliente, NumOrcamento = numOrcamento };
+
+            var cdClienteList = _clientesSelecionados?.Select(x => x.CdCliente).ToList();
+            var vendedor = dpVendedor.GetValue().ToString();   
+
+
+            var query = new OrcamentoQuery() { SituacaoList = situacaoList, 
+                DtInicio = dtInicio, 
+                DtFim = dtFim, 
+                CdCliente = cdCliente, 
+                NumOrcamento = numOrcamento ,
+                Vendedor = vendedor
+            };
             return query;
+        }
+
+        private async void LoadList()
+        {
+            await _orcamentoList.LoadAsync();
+            if (!_orcamentoList.GetAllItems().Any())
+            {
+                MessageForm.Info("Nenhum registro encontrado!");
+            }
+
         }
 
         #endregion
@@ -367,14 +413,14 @@ namespace Dataplace.Imersao.Presentation.Views.Orcamentos.Tools
             _orcamentoList.ChangeCheckState(true);
         }
 
-        private async void BtnCarregar_Click(object sender, EventArgs e)
+        private  void BtnCarregar_Click(object sender, EventArgs e)
         {
-            await _orcamentoList.LoadAsync();
+            LoadList();
         }
 
-        private async void chk_Click(object sender, EventArgs e)
+        private  void chk_Click(object sender, EventArgs e)
         {
-            await _orcamentoList.LoadAsync();
+            LoadList();
         }
         private void opt_Click(object sender, EventArgs e)
         {
@@ -460,21 +506,14 @@ namespace Dataplace.Imersao.Presentation.Views.Orcamentos.Tools
             }
 
         }
-
-
-
-
         private void CancelarFehacrOrcamentosView_Load(object sender, EventArgs e)
         {
 
         }
-
         private void txtNumOrcamento_Paint(object sender, PaintEventArgs e)
         {
 
         }
-
- 
         #region 
         private ISymInterfaceSearch _searchVendedor;
 

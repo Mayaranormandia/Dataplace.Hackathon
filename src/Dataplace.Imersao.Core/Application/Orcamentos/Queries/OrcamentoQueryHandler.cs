@@ -94,6 +94,9 @@ namespace Dataplace.Imersao.Core.Application.Orcamentos.Queries
             if (!string.IsNullOrEmpty(request.CdCliente?.Trim()))
                 builder.Where($"orcamento.CdCliente = @CdCliente", new { request.CdCliente });
 
+            if (!string.IsNullOrEmpty(request.Vendedor?.Trim()))
+                builder.Where($"orcamento.CdVendedor  = @Vendedor ", new { request.Vendedor });
+
             builder.OrderBy("orcamento.DtOrcamento DESC");
 
             var cmd = new CommandDefinition(selector.RawSql, selector.Parameters, flags: CommandFlags.NoCache);
