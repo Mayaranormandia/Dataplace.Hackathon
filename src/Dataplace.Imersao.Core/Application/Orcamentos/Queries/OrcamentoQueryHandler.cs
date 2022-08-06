@@ -88,6 +88,11 @@ namespace Dataplace.Imersao.Core.Application.Orcamentos.Queries
             if(request.DtInicio.HasValue && request.DtFim.HasValue)
                 builder.Where("orcamento.DtOrcamento between @DtInicio AND @DtFim ", new { DtInicio = request.DtInicio.Value.Date, DtFim = request.DtFim.Value.Date.AddDays(1).AddSeconds(-1) });
 
+            if (request.NumOrcamento > 0)
+                builder.Where($"orcamento.NumOrcamento = @NumOrcamento", new { request.NumOrcamento});
+
+            if (!string.IsNullOrEmpty(request.CdCliente?.Trim()))
+                builder.Where($"orcamento.CdCliente = @CdCliente", new { request.CdCliente });
 
             builder.OrderBy("orcamento.DtOrcamento DESC");
 

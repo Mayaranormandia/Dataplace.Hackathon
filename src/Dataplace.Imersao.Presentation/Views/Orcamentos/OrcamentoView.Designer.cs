@@ -42,6 +42,8 @@
             this.dpiValidadeData = new dpLibrary05.Infrastructure.Controls.DPInput();
             this.dpiValidadeDias = new dpLibrary05.Infrastructure.Controls.DPInput();
             this.dpiTotal = new dpLibrary05.Infrastructure.Controls.DPInput();
+            this.tpfinaceiro = new C1.Win.C1Command.C1DockingTabPage();
+            this.txtuser = new dpLibrary05.Infrastructure.Controls.DPInput();
             ((System.ComponentModel.ISupportInitialize)(this.tabMain)).BeginInit();
             this.tabMain.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picObservacoes)).BeginInit();
@@ -59,8 +61,10 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.tabMain.Controls.Add(this.tpItens);
+            this.tabMain.Controls.Add(this.tpfinaceiro);
             this.tabMain.Location = new System.Drawing.Point(0, 88);
             this.tabMain.Name = "tabMain";
+            this.tabMain.SelectedIndex = 1;
             this.tabMain.Size = new System.Drawing.Size(1003, 411);
             this.tabMain.TabIndex = 8;
             this.tabMain.TabsSpacing = 5;
@@ -70,7 +74,7 @@
             this.tpItens.Location = new System.Drawing.Point(1, 24);
             this.tpItens.Name = "tpItens";
             this.tpItens.Size = new System.Drawing.Size(1001, 386);
-            this.tpItens.TabIndex = 0;
+            this.tpItens.TabIndex = 1;
             this.tpItens.Text = "Itens";
             // 
             // picObservacoes
@@ -326,10 +330,47 @@
             this.dpiTotal.Size = new System.Drawing.Size(337, 35);
             this.dpiTotal.TabIndex = 6;
             // 
+            // tpfinaceiro
+            // 
+            this.tpfinaceiro.Location = new System.Drawing.Point(1, 24);
+            this.tpfinaceiro.Name = "tpfinaceiro";
+            this.tpfinaceiro.Size = new System.Drawing.Size(1001, 386);
+            this.tpfinaceiro.TabIndex = 0;
+            this.tpfinaceiro.Text = "Dados Financeiros";
+            // 
+            // txtuser
+            // 
+            this.txtuser.Active = false;
+            this.txtuser.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtuser.DataSource = null;
+            this.txtuser.DP_Caption = "Usuário";
+            this.txtuser.DP_CaptionVisibleType = dpLibrary05.Infrastructure.Controls.DPInput.CaptionVisibleTypeEnum.Top;
+            this.txtuser.DP_DataField = null;
+            this.txtuser.DP_FilterMemo = false;
+            this.txtuser.DP_InputType = dpLibrary05.Infrastructure.Controls.DPInput.InputTypeEnum.StringInput;
+            this.txtuser.DP_Length = 0;
+            this.txtuser.DP_Maximum = null;
+            this.txtuser.DP_Minimum = null;
+            this.txtuser.DP_NumericPrecision = 0;
+            this.txtuser.EditMask = null;
+            this.txtuser.EditMaskUpdate = false;
+            this.txtuser.FindMode = false;
+            this.txtuser.InterfaceField = null;
+            this.txtuser.IsReadonly = true;
+            this.txtuser.Location = new System.Drawing.Point(281, 45);
+            this.txtuser.Multiline = false;
+            this.txtuser.Name = "txtuser";
+            this.txtuser.SearchObject = null;
+            this.txtuser.SettingValue = false;
+            this.txtuser.Size = new System.Drawing.Size(174, 35);
+            this.txtuser.TabIndex = 7;
+            this.txtuser.Paint += new System.Windows.Forms.PaintEventHandler(this.dpInput1_Paint);
+            // 
             // OrcamentoView
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.txtuser);
             this.Controls.Add(this.dpiTotal);
             this.Controls.Add(this.picObservacoes);
             this.Controls.Add(this.dpiValidadeDias);
@@ -365,5 +406,7 @@
         private dpLibrary05.Infrastructure.Controls.DPInput dpiValidadeData;
         private dpLibrary05.Infrastructure.Controls.DPInput dpiValidadeDias;
         private dpLibrary05.Infrastructure.Controls.DPInput dpiTotal;
+        private C1.Win.C1Command.C1DockingTabPage tpfinaceiro;
+        private dpLibrary05.Infrastructure.Controls.DPInput txtuser;
     }
 }

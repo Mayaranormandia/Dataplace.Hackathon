@@ -99,7 +99,8 @@ namespace Dataplace.Imersao.Presentation.Views.Orcamentos
                 .Map(x => x.DataValidade, new DataBindingControl(dpiValidadeData, (x) => false))
                 .Map(x => x.CdVendedor, new DataBindingControl(dpiVendedor,
                     (x) => _c.GetInterfaceMode() == InterfaceModeEnum.Inserting || _c.GetInterfaceMode() == InterfaceModeEnum.Editing || (_c.GetInterfaceMode() == InterfaceModeEnum.StandBy && _c.GetSelectedMode() == SelectedModeEnum.One)))
-                .Map(x => x.VlTotal, new DataBindingControl(dpiTotal, (x) => false));
+                .Map(x => x.VlTotal, new DataBindingControl(dpiTotal, (x) => false))
+                 .Map(x => x.Usuario, new DataBindingControl(txtuser, (x) => false));
             _c.AddBindings(_b);
 
 
@@ -289,5 +290,10 @@ namespace Dataplace.Imersao.Presentation.Views.Orcamentos
             }
         }
         #endregion
+
+        private void dpInput1_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
     }
 }

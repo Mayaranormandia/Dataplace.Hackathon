@@ -13,6 +13,8 @@ using Dataplace.Imersao.Core.Domain.Orcamentos.Enums;
 using Dataplace.Imersao.Presentation.Views.Orcamentos.Messages;
 using dpLibrary05.Infrastructure.Helpers;
 using dpLibrary05.Infrastructure.Helpers.Permission;
+using dpLibrary05.Infrastructure.Helpers.SimpleSqlBulk;
+using dpLibrary05.SymphonyInterface;
 using MediatR;
 using System;
 using System.Collections.Generic;
@@ -35,7 +37,7 @@ namespace Dataplace.Imersao.Presentation.Views.Orcamentos.Tools
 
         #region constructors
         public CancelarFehacrOrcamentosView(
-            IServiceProvider serviceProvider, 
+            IServiceProvider serviceProvider,
             IEventAggregator eventAggregator)
         {
             InitializeComponent();
@@ -78,13 +80,24 @@ namespace Dataplace.Imersao.Presentation.Views.Orcamentos.Tools
             // dtpPrevisaoEntrega.KeyDown += Dtp_KeyDown;
 
 
+            //dpiVendedor.SearchObject = GetSearchVendedor();
+            //dpiVendedor.SearchObject = Common.PedidoSearch.find_usuario();
+            dpCliente.SearchObject = Common.PedidoSearch.find_cliente(new clsSymSearch.SearchArgs()
+            {
+                Fields = new List<clsSymInterfaceSearchField>() {
+                    new clsSymInterfaceSearchField() { SearchIndex=2, VisibleEdit =false },
+                    new clsSymInterfaceSearchField() { SearchIndex=4, VisibleEdit =false }
+                }
+            });
 
             // rotina para validar status do controle
             //  desabilitar ou habilitar algun componente em tela
             //  deixar invisível ou algo assim
             VerificarStatusControles();
-   
+
         }
+        
+
         #endregion
 
         #region tool events
@@ -94,6 +107,7 @@ namespace Dataplace.Imersao.Presentation.Views.Orcamentos.Tools
         {
             CancelarOrcamento,
             FecharOrcamento,
+            ReabrirOrcamento
         }
         private void CancelamentoOrcamentoView_ToolConfiguration(object sender, ToolConfigurationEventArgs e)
         {
@@ -126,7 +140,7 @@ namespace Dataplace.Imersao.Presentation.Views.Orcamentos.Tools
             }
 
             var itensSelecionados = _orcamentoList.GetCheckedItems();
-            if(itensSelecionados.Count() == 0)
+            if (itensSelecionados.Count() == 0)
             {
                 e.Cancel = true;
                 this.Message.Info(53727.ToMessage());
@@ -168,10 +182,10 @@ namespace Dataplace.Imersao.Presentation.Views.Orcamentos.Tools
                 }
 
 
-                
+
                 // permitir cancelamento 
                 if (e.CancellationRequested)
-                   break;
+                    break;
 
                 e.ProgressValue += 1;
             }
@@ -253,8 +267,8 @@ namespace Dataplace.Imersao.Presentation.Views.Orcamentos.Tools
         private ViewModelListBuilder<OrcamentoViewModel> GetConfiguration()
         {
             var configuration = new ViewModelListBuilder<OrcamentoViewModel>();
+            configuration.AllowSort();
 
-         
 
             configuration.HasHighlight(x => {
                 x.Add(orcamento => orcamento.Situacao == Core.Domain.Orcamentos.Enums.OrcamentoStatusEnum.Cancelado.ToDataValue(), System.Drawing.Color.Red);
@@ -267,7 +281,7 @@ namespace Dataplace.Imersao.Presentation.Views.Orcamentos.Tools
             configuration.Ignore(x => x.CdFilial);
             configuration.Ignore(x => x.SqTabela);
             configuration.Ignore(x => x.CdTabela);
-            configuration.Ignore(x => x.CdVendedor);
+            //configuration.Ignore(x => x.CdVendedor);
             configuration.Ignore(x => x.DiasValidade);
             configuration.Ignore(x => x.DataValidade);
             configuration.Ignore(x => x.TotalItens);
@@ -318,7 +332,11 @@ namespace Dataplace.Imersao.Presentation.Views.Orcamentos.Tools
                 situacaoList.Add(Core.Domain.Orcamentos.Enums.OrcamentoStatusEnum.Fechado);
             if (chkCancelado.Checked)
                 situacaoList.Add(Core.Domain.Orcamentos.Enums.OrcamentoStatusEnum.Cancelado);
-  
+
+
+            string cdCliente = dpCliente.GetValue()?.ToString();
+            int numOrcamento = (int)Convert.ToInt64(dpiNumOrcamento.GetValue()?.ToString().Length == 0 ? 0 : dpiNumOrcamento.GetValue());
+
 
             DateTime? dtInicio = null;
             DateTime? dtFim = null;
@@ -328,7 +346,7 @@ namespace Dataplace.Imersao.Presentation.Views.Orcamentos.Tools
             if (rangeDate.Date2.Value is DateTime d2)
                 dtFim = d2;
 
-            var query = new OrcamentoQuery() { SituacaoList = situacaoList, DtInicio =  dtInicio, DtFim =  dtFim };
+            var query = new OrcamentoQuery() { SituacaoList = situacaoList, DtInicio = dtInicio, DtFim = dtFim, CdCliente = cdCliente, NumOrcamento = numOrcamento };
             return query;
         }
 
@@ -353,7 +371,7 @@ namespace Dataplace.Imersao.Presentation.Views.Orcamentos.Tools
         {
             await _orcamentoList.LoadAsync();
         }
- 
+
         private async void chk_Click(object sender, EventArgs e)
         {
             await _orcamentoList.LoadAsync();
@@ -373,7 +391,7 @@ namespace Dataplace.Imersao.Presentation.Views.Orcamentos.Tools
         #endregion
 
         #region processamentos
-        private async Task CancelarOrcamento(OrcamentoViewModel item) 
+        private async Task CancelarOrcamento(OrcamentoViewModel item)
         {
 
             using (var scope = dpLibrary05.Infrastructure.ServiceLocator.ServiceLocatorScoped.Factory())
@@ -420,5 +438,77 @@ namespace Dataplace.Imersao.Presentation.Views.Orcamentos.Tools
 
         #endregion
 
+        private async Task ReabrirOrcamento(OrcamentoViewModel item)
+        {
+
+            using (var scope = dpLibrary05.Infrastructure.ServiceLocator.ServiceLocatorScoped.Factory())
+            {
+
+                var command = new ReabrirOrcamentoCommand(item);
+                var mediator = scope.Container.GetInstance<IMediatorHandler>();
+
+                var notifications = scope.Container.GetInstance<INotificationHandler<DomainNotification>>();
+                await mediator.SendCommand(command);
+
+                item.Result = Result.ResultFactory.New(notifications.GetNotifications());
+                if (item.Result.Success)
+                {
+                    item.Situacao = Core.Domain.Orcamentos.Enums.OrcamentoStatusEnum.Aberto.ToDataValue();
+                    item.DtFechamento = null;
+                }
+
+            }
+
+        }
+
+
+
+
+        private void CancelarFehacrOrcamentosView_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void txtNumOrcamento_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
+
+ 
+        #region 
+        private ISymInterfaceSearch _searchVendedor;
+
+        private ISymInterfaceSearch GetSearchVendedor()
+        {
+            if (_searchVendedor != null)
+                return _searchVendedor;
+
+            var prmVendendor = new dpLibrary05.Infrastructure.Helpers.clsSymSearch.SearchArgs()
+            {
+                Fields = new List<dpLibrary05.SymphonyInterface.clsSymInterfaceSearchField>()
+                {
+                    new dpLibrary05.SymphonyInterface.clsSymInterfaceSearchField(){
+                        SearchIndex = 2,
+                        VisibleEdit = false
+                    },
+                    new dpLibrary05.SymphonyInterface.clsSymInterfaceSearchField(){
+                        SearchIndex = 3,
+                        VisibleEdit = false
+                    },
+                    new dpLibrary05.SymphonyInterface.clsSymInterfaceSearchField(){
+                        SearchIndex = 4,
+                        VisibleEdit = false
+                    }
+                }
+            };
+            _searchVendedor = dpLibrary05.Infrastructure.Helpers.clsSymSearch.find_vendedor(prmVendendor);
+
+            return _searchVendedor;
+
+
+
+        }
+        #endregion
     }
 }
+
