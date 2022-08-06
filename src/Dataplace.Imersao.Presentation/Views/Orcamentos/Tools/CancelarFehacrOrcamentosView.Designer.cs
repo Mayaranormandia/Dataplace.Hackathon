@@ -275,7 +275,7 @@
             this.dpCliente.FindMode = false;
             this.dpCliente.InterfaceField = null;
             this.dpCliente.IsReadonly = false;
-            this.dpCliente.Location = new System.Drawing.Point(16, 72);
+            this.dpCliente.Location = new System.Drawing.Point(17, 75);
             this.dpCliente.Multiline = false;
             this.dpCliente.Name = "dpCliente";
             this.dpCliente.SearchObject = null;
@@ -328,7 +328,7 @@
             this.dpVendedor.FindMode = false;
             this.dpVendedor.InterfaceField = null;
             this.dpVendedor.IsReadonly = false;
-            this.dpVendedor.Location = new System.Drawing.Point(389, 74);
+            this.dpVendedor.Location = new System.Drawing.Point(411, 75);
             this.dpVendedor.Multiline = false;
             this.dpVendedor.Name = "dpVendedor";
             this.dpVendedor.SearchObject = null;
